@@ -1,0 +1,411 @@
+:root {
+  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  /* Official PayPal Color Palette */
+  --paypal-deepblue: #003087;      /* Primary PayPal corporate navy */
+  --paypal-blue: #0070ba;          /* Classic PayPal blue */
+  --paypal-lightblue: #009cde;     /* PayPal cyan/light blue */
+  --paypal-darkblue: #001c64;      /* Deep midnight blue for nav */
+  --paypal-gold: #ffc439;          /* Signature PayPal Gold/Yellow for CTA buttons */
+  --paypal-gold-hover: #f4b628;
+  --paypal-gold-text: #003087;
+
+  /* Neutrals & Surfaces (Clean PayPal Light Template) */
+  --bg-page: #f5f7fa;              /* Official PayPal portal light background */
+  --bg-card: #ffffff;              /* Crisp white cards */
+  --bg-card-subtle: #f8fafc;
+  --bg-card-hover: #f1f5f9;
+  --border-light: #e5e7eb;         /* Clean subtle border */
+  --border-subtle: #eaebed;
+  --border-focus: #0070ba;
+
+  /* Status Colors (PayPal Resolution Center Standards) */
+  --status-urgent-bg: #fdf2f2;
+  --status-urgent-text: #d92d20;
+  --status-urgent-border: #fecdca;
+
+  --status-warning-bg: #fff8e6;
+  --status-warning-text: #946300;
+  --status-warning-border: #ffe399;
+
+  --status-review-bg: #e6f2ff;
+  --status-review-text: #005ea6;
+  --status-review-border: #b8dcff;
+
+  --status-success-bg: #e8f7ee;
+  --status-success-text: #007b36;
+  --status-success-border: #b2e3c4;
+
+  /* Typography */
+  --text-main: #0c0c0d;
+  --text-body: #2c2e2f;
+  --text-muted: #687173;
+  --text-light: #8e9597;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-modal: 0 20px 40px -8px rgba(0, 0, 0, 0.2);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;          /* PayPal signature pill radius */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-page);
+  color: var(--text-body);
+  min-height: 100vh;
+  line-height: 1.5;
+  letter-spacing: -0.012em;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-main);
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* PayPal Card Container */
+.paypal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.paypal-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: #cbd5e1;
+}
+
+/* PayPal Pill Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 9px 20px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease-in-out;
+  user-select: none;
+  text-decoration: none;
+}
+
+/* Signature PayPal Gold CTA Button */
+.btn-paypal-gold {
+  background: var(--paypal-gold);
+  color: var(--paypal-gold-text);
+  border: 1px solid #eab308;
+  box-shadow: 0 2px 4px rgba(234, 179, 8, 0.2);
+}
+
+.btn-paypal-gold:hover {
+  background: var(--paypal-gold-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(234, 179, 8, 0.3);
+}
+
+/* Signature PayPal Classic Blue Button */
+.btn-paypal-blue {
+  background: var(--paypal-blue);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 112, 186, 0.25);
+}
+
+.btn-paypal-blue:hover {
+  background: var(--paypal-deepblue);
+  box-shadow: 0 4px 10px rgba(0, 48, 135, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Clean Secondary Outline Button */
+.btn-paypal-outline {
+  background: #ffffff;
+  color: var(--paypal-blue);
+  border: 1.5px solid var(--paypal-blue);
+}
+
+.btn-paypal-outline:hover {
+  background: rgba(0, 112, 186, 0.05);
+  border-color: var(--paypal-deepblue);
+  color: var(--paypal-deepblue);
+}
+
+/* Neutral Gray Button */
+.btn-paypal-neutral {
+  background: #f8fafc;
+  color: var(--text-body);
+  border: 1px solid var(--border-light);
+}
+
+.btn-paypal-neutral:hover {
+  background: #e2e8f0;
+  color: var(--text-main);
+}
+
+/* Danger / Reject Button */
+.btn-paypal-danger {
+  background: #ffffff;
+  color: #d92d20;
+  border: 1.5px solid #fecdca;
+}
+
+.btn-paypal-danger:hover {
+  background: #fdf2f2;
+  border-color: #d92d20;
+}
+
+/* Success Button */
+.btn-paypal-success {
+  background: #007b36;
+  color: #ffffff;
+}
+
+.btn-paypal-success:hover {
+  background: #005a27;
+}
+
+/* PayPal Status Badges */
+.paypal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.badge-waiting {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  border: 1px solid var(--status-warning-border);
+}
+
+.badge-review {
+  background: var(--status-review-bg);
+  color: var(--status-review-text);
+  border: 1px solid var(--status-review-border);
+}
+
+.badge-resolved {
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  border: 1px solid var(--status-success-border);
+}
+
+.badge-urgent {
+  background: var(--status-urgent-bg);
+  color: var(--status-urgent-text);
+  border: 1px solid var(--status-urgent-border);
+  animation: paypal-pulse 2s infinite;
+}
+
+@keyframes paypal-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 45, 32, 0.35); }
+  50% { box-shadow: 0 0 0 4px rgba(217, 45, 32, 0.1); }
+}
+
+/* PayPal Stepper / Progress Tracker */
+.paypal-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin: 16px 0;
+  padding: 0 10px;
+}
+
+.paypal-stepper::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 30px;
+  right: 30px;
+  height: 3px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+
+.paypal-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 2;
+}
+
+.paypal-step-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.paypal-step.completed .paypal-step-circle {
+  background: #007b36;
+  border-color: #007b36;
+  color: #ffffff;
+}
+
+.paypal-step.active .paypal-step-circle {
+  background: var(--paypal-blue);
+  border-color: var(--paypal-blue);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 112, 186, 0.2);
+}
+
+.paypal-step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-align: center;
+}
+
+.paypal-step.active .paypal-step-label {
+  color: var(--paypal-deepblue);
+  font-weight: 700;
+}
+
+/* AG GRID Custom PayPal Light Theme */
+.ag-theme-alpine-dark,
+.ag-theme-alpine,
+.ag-theme-quartz {
+  --ag-background-color: #ffffff !important;
+  --ag-header-background-color: #f8fafc !important;
+  --ag-odd-row-background-color: #ffffff !important;
+  --ag-row-hover-color: #f1f5f9 !important;
+  --ag-selected-row-background-color: #e6f2ff !important;
+  --ag-border-color: #e5e7eb !important;
+  --ag-header-foreground-color: #475569 !important;
+  --ag-foreground-color: #1e293b !important;
+  --ag-font-family: var(--font-body) !important;
+  --ag-font-size: 13.5px !important;
+  --ag-row-height: 68px !important;
+  --ag-header-height: 48px !important;
+}
+
+.ag-root-wrapper {
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--radius-lg) !important;
+  background: #ffffff !important;
+  overflow: hidden !important;
+}
+
+.ag-header-cell {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+.ag-header-cell-text {
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  font-size: 0.73rem;
+  letter-spacing: 0.04em;
+  color: #475569 !important;
+  white-space: nowrap !important;
+}
+
+.ag-cell {
+  display: flex !important;
+  align-items: center !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  overflow: visible !important;
+}
+
+.ag-row {
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9 !important;
+  transition: background-color 0.12s ease;
+}
+
+/* PayPal Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 28, 68, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  max-width: 740px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-modal);
+  padding: 28px;
+  position: relative;
+  color: var(--text-body);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
