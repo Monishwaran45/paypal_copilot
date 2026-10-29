@@ -1,9 +1,10 @@
 import { initialMockDisputes } from './initialMockData.js';
 
-// Standalone in-memory / local storage state for pure frontend development
+// Standalone in-memory / local storage state for fallback
 const STORAGE_KEY_DISPUTES = 'paypal_copilot_disputes_v1';
 const STORAGE_KEY_AUDIT = 'paypal_copilot_audit_v1';
 const STORAGE_KEY_RESTOCK = 'paypal_copilot_restock_v1';
+const API_BASE = ''; // uses Vite proxy
 
 const defaultRestockItems = [
   {
@@ -119,35 +120,78 @@ function saveStoredRestock(list) {
 
 export const api = {
   async getDisputes(status = null) {
+    try {
+      const url = status ? `/disputes?status=${encodeURIComponent(status)}` : '/disputes';
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.disputes && data.disputes.length > 0) {
+          saveStoredDisputes(data.disputes);
+          return data;
+        }
+      }
+    } catch (e) {
+      // Backend not running, use fallback
+    }
     const list = getStoredDisputes();
     const filtered = status ? list.filter(d => d.status === status) : list;
     return { success: true, count: filtered.length, disputes: filtered };
   },
 
   async getDispute(id) {
+    try {
+      const res = await fetch(`/disputes/${encodeURIComponent(id)}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
     const list = getStoredDisputes();
-    const matched = list.find(d => d.dispute_id === id);
+    const matched = list.find(d => (d.dispute_id === id || d.id === id));
     if (!matched) throw new Error(`Dispute ${id} not found`);
     return { success: true, dispute: matched };
   },
 
   async updateEvidence(id, evidenceText, approverId = 'seller_merchant_primary') {
+    try {
+      const res = await fetch(`/disputes/${encodeURIComponent(id)}/evidence`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: evidenceText, approver_id: approverId })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
+
     const list = getStoredDisputes();
-    const idx = list.findIndex(d => d.dispute_id === id);
+    const idx = list.findIndex(d => (d.dispute_id === id || d.id === id));
     if (idx === -1) throw new Error(`Dispute ${id} not found`);
 
     list[idx].ai_drafted_evidence = evidenceText;
+    if (list[idx].evidence_draft) list[idx].evidence_draft.text = evidenceText;
     saveStoredDisputes(list);
     return { success: true, dispute: list[idx] };
   },
 
   async approveDispute(id, approverId = 'seller_merchant_primary') {
+    try {
+      const res = await fetch(`/disputes/${encodeURIComponent(id)}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approver_id: approverId, approval_secret: 'demo_approval_secret_hackathon_2026' })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
+
     const list = getStoredDisputes();
-    const idx = list.findIndex(d => d.dispute_id === id);
+    const idx = list.findIndex(d => (d.dispute_id === id || d.id === id));
     if (idx === -1) throw new Error(`Dispute ${id} not found`);
 
     const now = new Date().toISOString();
     list[idx].status = 'UNDER_REVIEW';
+    list[idx].approval_state = 'submitted';
     list[idx].seller_approval = {
       approved: true,
       conceded: false,
@@ -177,12 +221,24 @@ export const api = {
   },
 
   async rejectDispute(id, reason, approverId = 'seller_merchant_primary') {
+    try {
+      const res = await fetch(`/disputes/${encodeURIComponent(id)}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason, approver_id: approverId })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
+
     const list = getStoredDisputes();
-    const idx = list.findIndex(d => d.dispute_id === id);
+    const idx = list.findIndex(d => (d.dispute_id === id || d.id === id));
     if (idx === -1) throw new Error(`Dispute ${id} not found`);
 
     const now = new Date().toISOString();
     list[idx].status = 'RESOLVED';
+    list[idx].approval_state = 'rejected';
     list[idx].seller_approval = {
       approved: false,
       conceded: true,
@@ -196,6 +252,23 @@ export const api = {
   },
 
   async simulateDispute(scenario = {}) {
+    try {
+      const res = await fetch('/disputes/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(scenario)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.dispute) {
+          const list = getStoredDisputes();
+          list.unshift(data.dispute);
+          saveStoredDisputes(list);
+          return data;
+        }
+      }
+    } catch (e) {}
+
     const list = getStoredDisputes();
     const newId = `PP-D-${Math.floor(4000000 + Math.random() * 5000000)}`;
     const dueHours = scenario.due_hours || 48;
@@ -203,14 +276,20 @@ export const api = {
 
     const simulated = {
       dispute_id: newId,
+      id: newId,
       status: 'WAITING_FOR_SELLER_RESPONSE',
+      approval_state: 'pending',
       dispute_amount: {
         currency: 'USD',
         value: parseFloat(scenario.amount || '450.00').toFixed(2)
       },
+      amount: {
+        currency: 'USD',
+        value: parseFloat(scenario.amount || '450.00').toFixed(2)
+      },
       reason: scenario.reason || 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED',
-      dispute_life_cycle_stage: 'INQUIRY',
       seller_response_due_date: dueDate,
+      respond_by: dueDate,
       order_id: `ORD-${Math.floor(10000 + Math.random() * 90000)}`,
       transaction_id: `TRX-${Math.floor(10000000 + Math.random() * 90000000)}X`,
       buyer: {
@@ -242,40 +321,12 @@ export const api = {
         delivery_address_verified: true
       },
       win_score: 91,
-      win_score_breakdown: {
-        carrier_delivery_verified: {
-          points: 40,
-          label: 'Carrier proof of delivery confirmed via KERNEL',
-          positive: true
-        },
-        signature_on_file: {
-          points: 25,
-          label: 'Recipient signature confirmed on delivery file',
-          positive: true
-        },
-        address_match: {
-          points: 20,
-          label: 'GPS zip matches transaction address',
-          positive: true
-        },
-        elastic_precedent: {
-          points: 12,
-          label: 'Elastic precedent similarity indicates 94% win rate',
-          positive: true
-        },
-        risk_deduction: {
-          points: -6,
-          label: 'Simulated high-priority case',
-          positive: false
-        }
-      },
-      elastic_precedent: {
-        precedent_id: 'PREC-77192',
-        similarity: 0.95,
-        benchmark_win_rate: 0.94,
-        policy_citation: 'PayPal Seller Protection Policy Section 11.3 (Proof of Delivery)'
-      },
-      ai_drafted_evidence: `Dear PayPal Dispute Resolution Team,\n\nWe respectfully contest Dispute ${newId} regarding Order for ${scenario.item_name || 'Product'} ($${scenario.amount || '450.00'}).\n\n1. PROOF OF SHIPMENT & DELIVERY:\nThe order was dispatched via ${scenario.carrier || 'UPS'} to the verified PayPal shipping address.\n\n2. CARRIER AUDIT CONFIRMATION:\nCarrier confirms delivery was successfully completed with signature on file. Audited via KERNEL.\n\n3. PAYPAL SELLER PROTECTION:\nAll criteria under Seller Protection Policy Section 11.3 have been satisfied.\n\nRespectfully submitted,\nAuthorized Merchant Representative`,
+      win_reasons: [
+        'Carrier proof of delivery confirmed via KERNEL',
+        'Recipient signature confirmed on file',
+        'Postal code matches buyer address'
+      ],
+      ai_drafted_evidence: `Dear PayPal Dispute Resolution Team,\n\nWe respectfully contest Dispute ${newId} regarding Order for ${scenario.item_name || 'Product'} ($${scenario.amount || '450.00'}).\n\n1. PROOF OF SHIPMENT & DELIVERY:\nThe order was dispatched via ${scenario.carrier || 'UPS'} to the verified PayPal shipping address.\n\n2. CARRIER AUDIT CONFIRMATION:\nCarrier confirms delivery was successfully completed with signature on file.\n\n3. PAYPAL SELLER PROTECTION:\nAll criteria under Seller Protection Policy Section 11.3 have been satisfied.\n\nRespectfully submitted,\nAuthorized Merchant Representative`,
       seller_approval: {
         approved: false,
         approved_at: null,
@@ -290,6 +341,14 @@ export const api = {
   },
 
   async getAuditTrail(disputeId = null) {
+    try {
+      const url = disputeId ? `/audit?dispute_id=${encodeURIComponent(disputeId)}` : '/audit';
+      const res = await fetch(url);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
+
     const list = getStoredAudit();
     const filtered = disputeId ? list.filter(a => a.disputeId === disputeId) : list;
     return {
@@ -305,6 +364,13 @@ export const api = {
   },
 
   async getRestockInventory() {
+    try {
+      const res = await fetch('/api/restock');
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
+
     const items = getStoredRestock();
     return {
       success: true,
@@ -316,6 +382,17 @@ export const api = {
   },
 
   async orderRestock(itemId, quantity, approverId = 'seller_merchant_primary') {
+    try {
+      const res = await fetch('/api/restock/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_id: itemId, quantity, approver_id: approverId })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
+
     const items = getStoredRestock();
     const idx = items.findIndex(i => i.id === itemId);
     if (idx === -1) throw new Error('Item not found');
@@ -342,6 +419,10 @@ export const api = {
   },
 
   async testZapierNotification() {
+    try {
+      const res = await fetch('/api/zapier/test-notification', { method: 'POST' });
+      if (res.ok) return await res.json();
+    } catch (e) {}
     return {
       success: true,
       channel: 'slack',
@@ -350,6 +431,10 @@ export const api = {
   },
 
   async testZapierAudit() {
+    try {
+      const res = await fetch('/api/zapier/test-audit', { method: 'POST' });
+      if (res.ok) return await res.json();
+    } catch (e) {}
     return {
       success: true,
       channel: 'google_sheets',
